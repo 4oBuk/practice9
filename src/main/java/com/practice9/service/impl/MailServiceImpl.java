@@ -10,9 +10,11 @@ import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class MailServiceImpl implements MailService {
 
     private final EmailRepository repository;
@@ -31,7 +33,7 @@ public class MailServiceImpl implements MailService {
     @Override
     public void scheduledSendFailedMessages() {
         List<Mail> failedMails = repository.findAllByStatus(MailStatus.FAILED);
-        for(Mail mail : failedMails) {
+        for (Mail mail : failedMails) {
             sendLetter(mail);
         }
     }
@@ -59,8 +61,9 @@ public class MailServiceImpl implements MailService {
             mailSender.send(message);
         } catch (MailException e) {
             mail.setStatus(MailStatus.FAILED);
+            mail.setErrorMessage(e.getClass().getName() + " " + e.getMessage());
             repository.save(mail);
-            return ;
+
         }
 
         mail.setStatus(MailStatus.SUCCESSFUL);
