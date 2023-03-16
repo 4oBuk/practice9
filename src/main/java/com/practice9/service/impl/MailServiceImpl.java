@@ -3,7 +3,7 @@ package com.practice9.service.impl;
 import com.practice9.dto.MailDto;
 import com.practice9.entity.Mail;
 import com.practice9.entity.MailStatus;
-import com.practice9.repository.EmailRepository;
+import com.practice9.repository.MailRepository;
 import com.practice9.service.MailService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
@@ -11,18 +11,19 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 public class MailServiceImpl implements MailService {
 
-    private final EmailRepository repository;
+    private final MailRepository repository;
     private final JavaMailSender mailSender;
 
     private final String username;
 
-    public MailServiceImpl(EmailRepository repository, JavaMailSender mailSender, @Value("${spring.mail.username}") String username) {
+    public MailServiceImpl(MailRepository repository, JavaMailSender mailSender, @Value("${spring.mail.username}") String username) {
         this.repository = repository;
         this.mailSender = mailSender;
         this.username = username;
@@ -51,6 +52,7 @@ public class MailServiceImpl implements MailService {
         sendLetter(mail);
     }
 
+    @Transactional
     public void sendLetter(Mail mail) {
         SimpleMailMessage message = new SimpleMailMessage();
         try {
@@ -59,14 +61,13 @@ public class MailServiceImpl implements MailService {
             message.setSubject(mail.getSubject());
             message.setText(mail.getContent());
             mailSender.send(message);
+            mail.setStatus(MailStatus.SUCCESSFUL);
+            repository.save(mail);
         } catch (MailException e) {
             mail.setStatus(MailStatus.FAILED);
             mail.setErrorMessage(e.getClass().getName() + " " + e.getMessage());
             repository.save(mail);
 
         }
-
-        mail.setStatus(MailStatus.SUCCESSFUL);
-        repository.save(mail);
     }
 }

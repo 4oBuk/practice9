@@ -26,7 +26,7 @@ public class KafkaTopicConfig {
 
     @Bean
     public NewTopic paymentReceivedTopic() {
-        return new NewTopic(mailSentTopic, 1, (short) 1);
+        return new NewTopic(mailSentTopic, 2, (short) 1);
     }
 }
 
