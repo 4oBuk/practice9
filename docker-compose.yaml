@@ -11,8 +11,10 @@ services:
     ports:
       - '8080:8080'
     depends_on:
-      - elasticsearch
-      - kafka
+      elasticsearch:
+        condition: service_healthy
+      kafka:
+        condition: service_started
     networks:
       - app-network
   elasticsearch:
@@ -26,6 +28,11 @@ services:
       - ./data:/usr/share/elasticsearch/data
     ports:
       - '9200:9200'
+    healthcheck:
+      test: [ "CMD", "curl", "--silent", "--fail", "http://localhost:9200/_cat/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     networks:
       - app-network
   zookeeper:
